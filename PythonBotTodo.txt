@@ -1,0 +1,11 @@
+PythonBotTodo
+
+()Basico projeto no github
+(x)Basico 'Hello World' Project
+()Descobrir UI basica
+
+()Descobrir funcao para mover mouse
+()Descobrir funcao para usar teclado
+
+()Descobrir como guardar dados
+
