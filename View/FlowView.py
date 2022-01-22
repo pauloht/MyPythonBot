@@ -1,11 +1,16 @@
 from tkinter import *;
+from tkinter import messagebox;
+from tkinter.messagebox import askyesno, askquestion
 import tkinter as tk
 import time;
 import pyautogui;
-from . import MainView;
+from . import MainView, ShowImageView;
+from PIL import Image, ImageTk
 import json;
 from Data import ActionFlow;
-from Data.Actions import MouseClickAction, PrintAction, SleepAction, Action;
+from Data.Actions import MouseClickAction, PrintAction, SleepAction, Action, MouseMoveAction, WriteAction, ImageAction;
+import os;
+import math;
 
 
 class FlowView:
@@ -15,7 +20,7 @@ class FlowView:
     btnRecordClickAction = None;
     flow = None;
     index = 0;
-    sleepTime = 2;
+    sleepTime = 0.5;
     currentAction = None;
     saveTxt = None;
     sleepInValue = "";
@@ -35,18 +40,60 @@ class FlowView:
         self.currentActionLabel.config(text = str(self.currentAction))
 
     def CreateMouseClickAction(self):
-        time.sleep(self.sleepTime);
-        currentMouseX, currentMouseY = pyautogui.position();
-        self.currentAction = MouseClickAction.MouseClickAction(currentMouseX, currentMouseY);
+        self.currentAction = MouseClickAction.MouseClickAction();
         self.onActionUpdate();
+
+    def getTxt(self):
+        return self.sleepInValue.get()
 
     def CreateSleepAction(self):
         try:
-            time = int(self.sleepInValue.get());
+            time = int(self.getTxt());
             self.currentAction = SleepAction.SleepAction(time);
             self.onActionUpdate();
         except:
             print("Canceling");
+
+    def CreateMoveMouseAction(self):
+        time.sleep(self.sleepTime);
+        currentMouseX, currentMouseY = pyautogui.position();
+        self.currentAction = MouseMoveAction.MouseMoveAction(currentMouseX, currentMouseY);
+        self.onActionUpdate();
+
+    def CreateWriteAction(self):
+        toWrite = self.getTxt();
+        if (len(toWrite) == 0):
+            return;
+        self.currentAction = WriteAction.WriteAction(toWrite);
+        self.onActionUpdate();
+
+    def CreateImageAction(self):
+        #messagebox.showinfo(title="alert", message="Move to firstCorner")
+        imgName = self.getTxt();
+        if (len(imgName) == 0):
+            print("no file name");
+            return;
+        time.sleep(self.sleepTime);
+        print("snapshot first position")
+        #messagebox.showinfo(title="alert", message="Move to secondCorner")
+        currentMouseX, currentMouseY = pyautogui.position();
+        time.sleep(self.sleepTime);
+        print("snapshot second position")
+        currentMouseX2, currentMouseY2 = pyautogui.position();
+        difx = abs(currentMouseX - currentMouseX2);
+        dify = abs(currentMouseY - currentMouseY2);
+        posx = math.floor((currentMouseX + currentMouseX2)/2 - difx/2);
+        posy = math.floor((currentMouseY + currentMouseY2)/2 - dify/2);
+        self.im = pyautogui.screenshot("./Images/" + imgName,
+                                        region=(
+                                            posx,
+                                            posy,
+                                            difx,
+                                            dify
+                                            ))
+        self.currentAction = ImageAction.ImageAction(imgName, posx, posy, difx, dify);
+        self.onActionUpdate();
+        return;
 
     def initEmptyAction(self):
         self.currentActionLabel.config(text = "No action")
@@ -97,10 +144,9 @@ class FlowView:
             f.close();
         self.switchContext();
 
-    def __init__(self, old_menu, flow):
+    def __init__(self, flow):
         print("Creating FlowView");
-        old_menu.destroy();
-        self.menu_inicial = Tk();
+        self.menu_inicial = tk.Toplevel();
         self.menu_inicial.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.menu_inicial.title("Flow Creation");
         # MainView.MainView.initWindow(self);
@@ -160,6 +206,9 @@ class FlowView:
         centerWrapper.pack(fill = "both", expand=True);
         centerWrapper.grid_rowconfigure(0, weight=1);
         centerWrapper.grid_rowconfigure(1, weight=1);
+        centerWrapper.grid_rowconfigure(2, weight=1);
+        centerWrapper.grid_rowconfigure(3, weight=1);
+        centerWrapper.grid_rowconfigure(4, weight=1);
         centerWrapper.grid_columnconfigure(0, weight=1);
         centerWrapper.grid_columnconfigure(1, weight=1);
         clickBtn = Button(
@@ -168,15 +217,33 @@ class FlowView:
             command = self.CreateMouseClickAction
             );
         clickBtn.grid(row=0,column=0, sticky="nsew");
+        moveBtn = Button(
+            master = centerWrapper,
+            text = "Move Mouse",
+            command = self.CreateMoveMouseAction
+            );
+        moveBtn.grid(row=1,column=0,sticky="nsew");
+        writeBtn = Button(
+            master = centerWrapper,
+            text = "Write Txt",
+            command = self.CreateWriteAction
+            );
+        writeBtn.grid(row=2,column=0,sticky="nsew");
         sleepBtn = Button(
             master = centerWrapper,
             text = "Sleep Btn",
             command = self.CreateSleepAction
             );
-        sleepBtn.grid(row=1,column=0, sticky="nsew");
+        sleepBtn.grid(row=3,column=0, sticky="nsew");
+        imageBtn = Button(
+            master = centerWrapper,
+            text = "ImageBtn",
+            command = self.CreateImageAction
+            );
+        imageBtn.grid(row=4,column=0, sticky="nsew");
         self.sleepInValue = tk.StringVar()
         inValueEntry = tk.Entry(centerWrapper, textvariable=self.sleepInValue)
-        inValueEntry.grid(row=1, column=1, sticky="nsew");
+        inValueEntry.grid(row=0, column=1, sticky="nsew", rowspan=4);
         previousButton = Button(
             master = bottomWrapper,
             text = "Previous",
@@ -204,7 +271,7 @@ class FlowView:
             );
         saveTxt = Text(
             master = saveFrame)
-        saveTxt.insert(INSERT, "DefaultName.txt")
+        saveTxt.insert(INSERT, flow.Name)
         self.saveTxt = saveTxt;
         saveButton.place(
             relx = 0.5,
@@ -223,14 +290,4 @@ class FlowView:
             anchor = "center"
         )
         self.loadAction();
-        self.menu_inicial.mainloop();
-        # self.btnRecordClickAction = Button(
-        #     master = self.menu_inicial,
-        #     text = "Record Click",
-        #     command = self.CreateMouseClickAction,
-        #     bg = "green",
-        #     width = 500,
-        #     height = 200);
-        # self.btnRecordClickAction.place(
-        #     x = 0,
-        #     y = 50);
+        # self.menu_inicial.mainloop();

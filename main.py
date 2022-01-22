@@ -1,6 +1,24 @@
-from View import MainView
+from tkinter import *
+import tkinter as tk
+from View import MainView, ShowImageView
+
 
 MainView.MainView();
+
+#callback print
+#import traceback
+#for line in traceback.format_stack():
+        # print(line.strip()
+
+#traceback print
+# import traceback
+# import sys
+# try:
+#     do_stuff()
+# except Exception:
+#     print(traceback.format_exc())
+#     # or
+#     print(sys.exc_info()[2])
 
 #print screen
 # def printSS():

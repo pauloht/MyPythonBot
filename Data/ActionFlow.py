@@ -1,15 +1,18 @@
 import json;
 from json import JSONEncoder;
-from .Actions import Action, SleepAction, MouseClickAction
+from .Actions import Action, SleepAction, MouseClickAction, MouseMoveAction, WriteAction, ImageAction
 
 class ActionFlow:
     ActionList = [ ]
     ActionFlowSeparator = "|";
 
     def __init__(self):
+        self.Name = "Default_Name.txt";
         print("Initing action flow");
 
     def ExecuteFlow(self):
+        print("actionList size : " + str(len(self.ActionList)))
+
         for action in self.ActionList:
             action.OnAction();
 
@@ -28,6 +31,7 @@ class ActionFlow:
         first_split = json.split(ActionFlow.ActionFlowSeparator);
         _len = int(first_split[0]);
         flow = ActionFlow();
+        flow.ActionList = [];
         print("Has " + str(_len) + " Actions");
 
         for x in range(_len):
@@ -40,6 +44,12 @@ class ActionFlow:
                 newAction = SleepAction.SleepAction.Deserialize(actionAtributes);
             elif (type == "MouseClick"):
                 newAction = MouseClickAction.MouseClickAction.Deserialize(actionAtributes);
+            elif (type == MouseMoveAction.MouseMoveAction.Type):
+                newAction = MouseMoveAction.MouseMoveAction.Deserialize(actionAtributes);
+            elif (type == WriteAction.WriteAction.Type):
+                newAction = WriteAction.WriteAction.Deserialize(actionAtributes);
+            elif (type == ImageAction.ImageAction.Type):
+                newAction = ImageAction.ImageAction.Deserialize(actionAtributes);
             if (newAction != None):
                 flow.ActionList.append(newAction);
 

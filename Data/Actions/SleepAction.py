@@ -1,4 +1,5 @@
 import pyautogui
+import time;
 from .Action import Action
 
 class SleepAction(Action):
@@ -23,5 +24,6 @@ class SleepAction(Action):
 
         return obj;
 
-    def onAction(self):
+    def OnAction(self):
+        print("Sleeping Action");
         time.sleep(self.sleepTime);
