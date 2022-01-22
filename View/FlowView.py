@@ -1,7 +1,11 @@
 from tkinter import *;
+import tkinter as tk
 import time;
-import pyautogui
-from Data.Actions import MouseClickAction, PrintAction, SleepAction;
+import pyautogui;
+from . import MainView;
+import json;
+from Data import ActionFlow;
+from Data.Actions import MouseClickAction, PrintAction, SleepAction, Action;
 
 
 class FlowView:
@@ -14,6 +18,18 @@ class FlowView:
     sleepTime = 2;
     currentAction = None;
     saveTxt = None;
+    sleepInValue = "";
+
+    def switchContext(self):
+        if (self.menu_inicial == None):
+            return;
+        self.menu_inicial.protocol("WM_DELETE_WINDOW", None);
+        self.menu_inicial.destroy();
+        self.menu_inicial = None;
+        MainView.MainView();
+
+    def on_closing(self):
+        self.switchContext();
 
     def onActionUpdate(self):
         self.currentActionLabel.config(text = str(self.currentAction))
@@ -25,8 +41,12 @@ class FlowView:
         self.onActionUpdate();
 
     def CreateSleepAction(self):
-        self.currentAction = SleepAction.SleepAction(5);
-        self.onActionUpdate();
+        try:
+            time = int(self.sleepInValue.get());
+            self.currentAction = SleepAction.SleepAction(time);
+            self.onActionUpdate();
+        except:
+            print("Canceling");
 
     def initEmptyAction(self):
         self.currentActionLabel.config(text = "No action")
@@ -46,11 +66,14 @@ class FlowView:
         print("loadAction -> onActionUpdate");
         self.onActionUpdate();
 
-    def onNextPress(self):
+    def insertCurrentAction(self):
         if (self.index >= len(self.flow.ActionList)):
             self.flow.ActionList.insert(self.index, self.currentAction);
         else:
             self.flow.ActionList[self.index] = self.currentAction
+
+    def onNextPress(self):
+        self.insertCurrentAction();
         self.index = self.index + 1;
         print("NextPress, index: " + str(self.index));
         self.loadAction();
@@ -64,19 +87,30 @@ class FlowView:
         self.loadAction();
 
     def onSavePress(self):
+        if (self.currentAction != None):
+            self.insertCurrentAction();
         _str = self.saveTxt.get("1.0", END);
+        # stream = json.dumps(self.flow, separators=(',', ':'), default=lambda o: o.__dict__);
+        stream = self.flow.Serialize();
         with open('./Saved/' + _str[0:(len(_str)-1)], 'w') as f:
-            f.write('Create a new text file!')
+            f.write(stream)
             f.close();
-        self.menu_inicial.destroy();
-        return;
+        self.switchContext();
 
-    def __init__(self, menu_inicial, flow):
-        self.menu_inicial = menu_inicial;
+    def __init__(self, old_menu, flow):
+        print("Creating FlowView");
+        old_menu.destroy();
+        self.menu_inicial = Tk();
+        self.menu_inicial.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.menu_inicial.title("Flow Creation");
+        # MainView.MainView.initWindow(self);
+        self.menu_inicial.geometry(
+            "500x250");
+        self.menu_inicial['bg'] = "gray"
         self.flow = flow;
         self.index = 0;
         self.countLabel = Label(
-            menu_inicial,
+            self.menu_inicial,
             text = "Count 0");
         upperContainerHeight = 50;
         bottomContainerHeight = 50;
@@ -89,7 +123,7 @@ class FlowView:
         self.countLabel.pack_propagate(False);
 
         self.currentActionLabel = Label(
-            menu_inicial,
+            self.menu_inicial,
             text = "No Action");
         self.currentActionLabel.place(
             width = (500 - 150),
@@ -99,7 +133,7 @@ class FlowView:
             anchor = CENTER)
 
         bottomFrame = Frame(
-            menu_inicial,
+            self.menu_inicial,
             # bg = "red"
         );
         bottomFrame.place(
@@ -115,19 +149,19 @@ class FlowView:
         bottomWrapper.pack(fill = "both", expand=True);
         centerFrameSize = 250 - bottomContainerHeight - upperContainerHeight;
         centerFrame = Frame(
-            menu_inicial);
+            self.menu_inicial);
         centerFrame.place(
             width = 500,
             height = centerFrameSize,
             x = 0,
             y = upperContainerHeight);
         centerWrapper = Frame(
-            centerFrame,
-            bg = "red");
+            centerFrame);
         centerWrapper.pack(fill = "both", expand=True);
         centerWrapper.grid_rowconfigure(0, weight=1);
         centerWrapper.grid_rowconfigure(1, weight=1);
         centerWrapper.grid_columnconfigure(0, weight=1);
+        centerWrapper.grid_columnconfigure(1, weight=1);
         clickBtn = Button(
             master = centerWrapper,
             text = "Click Btn",
@@ -140,6 +174,9 @@ class FlowView:
             command = self.CreateSleepAction
             );
         sleepBtn.grid(row=1,column=0, sticky="nsew");
+        self.sleepInValue = tk.StringVar()
+        inValueEntry = tk.Entry(centerWrapper, textvariable=self.sleepInValue)
+        inValueEntry.grid(row=1, column=1, sticky="nsew");
         previousButton = Button(
             master = bottomWrapper,
             text = "Previous",
@@ -185,11 +222,10 @@ class FlowView:
             height = 25,
             anchor = "center"
         )
-
-
         self.loadAction();
+        self.menu_inicial.mainloop();
         # self.btnRecordClickAction = Button(
-        #     master = menu_inicial,
+        #     master = self.menu_inicial,
         #     text = "Record Click",
         #     command = self.CreateMouseClickAction,
         #     bg = "green",

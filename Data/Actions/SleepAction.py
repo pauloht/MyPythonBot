@@ -2,14 +2,26 @@ import pyautogui
 from .Action import Action
 
 class SleepAction(Action):
-    sleepTime = 1;
-    sleepVar = 1;
-
     def __init__(self, sleepTime):
+        Action.__init__(self);
         self.sleepTime = sleepTime;
+        self.sleepVar = 1;
+        self.Type = "Sleep";
+        # self.Type = ActionType.SLEEP;
 
     def __str__(self):
         return "Sleep|(" + str(self.sleepTime) + " +/- " + str(self.sleepVar) + ")";
 
-    def onAction():
+    def Serialize(self):
+        separator = Action.ActionSeparator;
+        return self.Type + separator + str(self.sleepTime) + separator + str(self.sleepVar);
+
+    def Deserialize(json):
+        print(*json);
+        sleepTime = int(json[1]);
+        obj = SleepAction(sleepTime);
+
+        return obj;
+
+    def onAction(self):
         time.sleep(self.sleepTime);

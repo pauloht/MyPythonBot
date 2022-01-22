@@ -1,47 +1,6 @@
-from tkinter import *;
-import tkinter as tk
-import pyautogui
-from View import FlowView
-from Data import ActionFlow
-from Data.Actions import MouseClickAction, PrintAction;
+from View import MainView
 
-menu_inicial = Tk();
-menu_inicial.title("Primeira APP");
-
-def initWindow():
-    global menu_inicial;
-    menu_inicial.geometry(
-        "500x250");
-    menu_inicial['bg'] = "gray"
-    #menu_inicial.resizable(False, False);
-
-btnGroup = []
-
-def createFlowAction():
-    global menu_inicial;
-    menu_inicial.destroy();
-    menu_inicial = Tk();
-    menu_inicial.title("Flow Creation");
-    initWindow();
-    FlowView.FlowView(menu_inicial, ActionFlow.ActionFlow())
-
-
-    # menu_inicial.title("Second window");
-    # menu_inicial['bg'] = "gray";
-    # menu_inicial.mainloop();
-
-createFlowBtn = Button(
-    master = menu_inicial,
-    command = createFlowAction,
-    text = "Create Flow"
-)
-btnGroup.append(createFlowBtn)
-
-for btn in btnGroup:
-    btn.pack();
-
-initWindow();
-menu_inicial.mainloop();
+MainView.MainView();
 
 #print screen
 # def printSS():
