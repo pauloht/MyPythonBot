@@ -24,4 +24,5 @@ class WriteAction(Action):
         return obj;
 
     def OnAction(self):
+        print("Executing write string action");
         pyautogui.write(self.stringToWrite, interval=0.25)

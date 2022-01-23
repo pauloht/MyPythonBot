@@ -22,4 +22,5 @@ class MouseClickAction(Action):
         return obj;
 
     def OnAction(self):
+        print("Executing mouseClick action");
         pyautogui.click();

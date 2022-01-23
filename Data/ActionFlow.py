@@ -11,10 +11,13 @@ class ActionFlow:
         print("Initing action flow");
 
     def ExecuteFlow(self):
-        print("actionList size : " + str(len(self.ActionList)))
+        print("Executing " + self.Name + " flow");
 
         for action in self.ActionList:
-            action.OnAction();
+            ret = action.OnAction();
+            if (ret != None):
+                break;
+        return ret;
 
     def AddAction(self, Action):
         self.ActionList.append(Action);

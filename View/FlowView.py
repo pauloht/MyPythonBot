@@ -14,16 +14,8 @@ import math;
 
 
 class FlowView:
-    menu_inicial = None;
-    countLabel = None;
-    currentActionLabel = None;
-    btnRecordClickAction = None;
-    flow = None;
-    index = 0;
-    sleepTime = 0.5;
-    currentAction = None;
-    saveTxt = None;
-    sleepInValue = "";
+    fieldSeparator = " "
+    sleepTime = 2
 
     def switchContext(self):
         if (self.menu_inicial == None):
@@ -48,16 +40,43 @@ class FlowView:
 
     def CreateSleepAction(self):
         try:
-            time = int(self.getTxt());
-            self.currentAction = SleepAction.SleepAction(time);
+            allTxt = self.getTxt();
+            if (len(allTxt) == 0):
+                print("Empty  txt, ignoring");
+                return;
+            splitTxt = allTxt.split(FlowView.fieldSeparator)
+            if (len(splitTxt) < 2):
+                print("Expected at least 2 fields, got " + str(len(splitTxt)));
+                return;
+            time = int(splitTxt[0]);
+            timeVar = int(splitTxt[1]);
+            self.currentAction = SleepAction.SleepAction(time, timeVar);
             self.onActionUpdate();
         except:
-            print("Canceling");
+            print("Catch error, canceling");
 
     def CreateMoveMouseAction(self):
+        allTxt = self.getTxt();
+        if (len(allTxt) == 0):
+            print("Empty  txt, ignoring");
+            return;
+        splitTxt = allTxt.split(FlowView.fieldSeparator)
+        if (len(splitTxt) < 2):
+            print("Expected at least 2 fields, got " + str(len(splitTxt)));
+            return;
+        try:
+            timeToMove = int(splitTxt[0])
+        except:
+            print("Failed to parse timeToMove, string: " + splitTxt[0])
+            return;
+        try:
+            jitter = int(splitTxt[1])
+        except:
+            print("Failed to parse jitter, string: " + splitTxt[1])
+            return;
         time.sleep(self.sleepTime);
         currentMouseX, currentMouseY = pyautogui.position();
-        self.currentAction = MouseMoveAction.MouseMoveAction(currentMouseX, currentMouseY);
+        self.currentAction = MouseMoveAction.MouseMoveAction(currentMouseX, currentMouseY, timeToMove, jitter);
         self.onActionUpdate();
 
     def CreateWriteAction(self):
@@ -69,9 +88,29 @@ class FlowView:
 
     def CreateImageAction(self):
         #messagebox.showinfo(title="alert", message="Move to firstCorner")
-        imgName = self.getTxt();
+        input = self.getTxt();
+        if (len(input) == 0):
+            print("input empty");
+            return;
+        input_split = input.split(FlowView.fieldSeparator);
+        if (len(input_split) < 3):
+            print("Expected at least 3 fields, got " + str(len(input)));
+            return;
+        imgName = input_split[0];
         if (len(imgName) == 0):
-            print("no file name");
+            print("No image name");
+            return;
+        png_extension = ".png";
+        if not(imgName.endswith(png_extension)):
+            imgName += png_extension;
+        try:
+            pulses = int(input_split[1]);
+        except:
+            print("Failed to parse to int string:" + input_split[1]);
+            return;
+        onFailFlow = input_split[2];
+        if (len(onFailFlow) == 0):
+            print("OnFailFlow field empty");
             return;
         time.sleep(self.sleepTime);
         print("snapshot first position")
@@ -91,7 +130,7 @@ class FlowView:
                                             difx,
                                             dify
                                             ))
-        self.currentAction = ImageAction.ImageAction(imgName, posx, posy, difx, dify);
+        self.currentAction = ImageAction.ImageAction(imgName, posx, posy, difx, dify, pulses, onFailFlow);
         self.onActionUpdate();
         return;
 

@@ -2,7 +2,7 @@ from tkinter import *;
 import tkinter as tk
 import pyautogui
 from View import FlowView
-from Data import ActionFlow
+from Data import ActionFlow, ExecuteFlowHandler
 from Data.Actions import MouseClickAction, PrintAction;
 import os
 
@@ -58,7 +58,7 @@ class MainView:
             return;
         flow = ActionFlow.ActionFlow.Deserialize(stream)
         flow.Name = fileName;
-        flow.ExecuteFlow();
+        ExecuteFlowHandler.ExecuteFlow(flow);
 
     def createFileBtnsList(self):
         files = os.listdir("./Saved");
